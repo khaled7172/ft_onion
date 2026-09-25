@@ -1,0 +1,9 @@
+version: '3.8'
+
+services:
+  ft_onion:
+    build: .
+    container_name: ft_onion_service
+    restart: unless-stopped
+    volumes:
+      - ./hidden_service:/var/lib/tor/hidden_service

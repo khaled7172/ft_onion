@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hidden Service 42</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #0f0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+        #terminal {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid #0f0;
+            padding: 20px;
+            width: 60%;
+            height: 50%;
+            box-shadow: 0 0 20px #0f0;
+            overflow-y: auto;
+        }
+        .input-line {
+            display: flex;
+        }
+        .prompt { margin-right: 10px; }
+        input {
+            background: transparent;
+            border: none;
+            color: #0f0;
+            font-family: inherit;
+            font-size: 1em;
+            outline: none;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="matrix"></canvas>
+    <div id="terminal">
+        <div>Welcome to ft_onion. Type 'help' to begin.</div>
+        <div id="output"></div>
+        <div class="input-line">
+            <span class="prompt">guest@tor:~$</span>
+            <input type="text" id="cmd" autocomplete="off" autofocus>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Rain Background
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()';
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = Array(Math.floor(columns)).fill(1);
+
+        function draw() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#0F0';
+            ctx.font = fontSize + 'px monospace';
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars[Math.floor(Math.random() * chars.length)];
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+        setInterval(draw, 33);
+
+        // Interactive Terminal
+        const cmd = document.getElementById('cmd');
+        const output = document.getElementById('output');
+        
+        cmd.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const val = this.value.trim().toLowerCase();
+                this.value = '';
+                
+                let response = '';
+                if (val === 'help') {
+                    response = 'Available commands: about, status, clear';
+                } else if (val === 'about') {
+                    response = 'ft_onion: A Tor hidden service created for the 42 Cybersecurity Piscine.';
+                } else if (val === 'status') {
+                    response = 'Services: Nginx (Port 80) [OK], SSH (Port 4242) [OK], Tor Hidden Service [ACTIVE]';
+                } else if (val === 'clear') {
+                    output.innerHTML = '';
+                    return;
+                } else if (val !== '') {
+                    response = `Command not found: ${val}`;
+                }
+                
+                if (val !== '') {
+                    output.innerHTML += `<div><span class="prompt">guest@tor:~$</span> ${val}</div>`;
+                    output.innerHTML += `<div>${response}</div>`;
+                    output.parentElement.scrollTop = output.parentElement.scrollHeight;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
