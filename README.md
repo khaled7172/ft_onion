@@ -7,7 +7,7 @@ A deep dive into the Tor network, hidden services, and secure server configurati
 ## Overview
 The goal of this project is to create an anonymous web service on the Tor network (a hidden service). The service must host a static webpage via Nginx (port 80) and provide secure SSH access (port 4242) while blocking all incoming traﬃc from the public internet.
 
-## Features Implemented
+## Features ImplementedV
 - **Tor Hidden Service**: Automatically generates and hosts a V3 `.onion` address.
 - **Nginx Web Server**: Configured to serve content strictly via localhost proxy.
 - **Bonus 1 (SSH Fortification)**: Root login disabled, password authentication disabled, port changed to 4242, auth attempts strictly limited.
@@ -42,11 +42,47 @@ make clean
 make
 copy .onion URL to a web browser
 click terminal and try help, about, status
-torsocks ssh -p 4242 root@<URL>.onion should fail
-torsocks ssh -p 4242 guest@<URL>.onion to try to enter password but should be respected
-docker exec -i ft_onion_service sh -c 'cat >> /home/guest/.ssh/authorized_keys' < ~/.ssh/id_rsa.pub copy machines ssh key to authorized list
-torsocks ssh -p 4242 guest@<URL>.onion login
-curl localhost:80 to test if it is really only locally and not available from the internet
-make clean
+```
+ssh -o 'ProxyCommand=nc -X 5 -x 127.0.0.1:9150 %h %p' \
+    -p 4242 \
+    root@<URL>onion
+```
 
+```
+ssh -o 'ProxyCommand=nc -X 5 -x 127.0.0.1:9150 %h %p' \
+    -o PubkeyAuthentication=no \
+    -o PreferredAuthentications=password \
+    -p 4242 \
+    guest@<URL>.onion
+```
+copy pub key to container
+```
+docker exec -i ft_onion_service \
+    sh -c 'cat >> /home/guest/.ssh/authorized_keys' \
+    < ~/.ssh/id_rsa.pub
+```
+set correct permissions for the key
+```
+docker exec ft_onion_service \
+    sh -c 'chown guest:guest /home/guest/.ssh/authorized_keys && chmod 600 /home/guest/.ssh/authorized_keys'
+```
+
+login as gust through tor browser
+```
+ssh -o 'ProxyCommand=nc -X 5 -x 127.0.0.1:9150 %h %p' \
+    -i ~/.ssh/id_rsa \
+    -p 4242 \
+    guest@ou4r47kzepgwb4e5yjyqaueznwwinggady5vdvg6tjzaiu7zfqetdhid.onion
+```
+
+test nginx is working
+```
+docker exec ft_onion_service nginx -t
+docker exec ft_onion_service ss -lntp
+```
+
+```
+docker-compose ps
+docker port ft_onion_service
+```
 

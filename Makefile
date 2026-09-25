@@ -22,7 +22,10 @@ hostname:
 stop:
 	docker-compose down
 
-clean: stop
+clean:
+	-docker exec ft_onion_service sh -c 'rm -rf /var/lib/tor/hidden_service/*'
+	-docker exec ft_onion_service chmod 755 /var/lib/tor/hidden_service
+	docker-compose down
 	docker system prune -f
 	rm -rf hidden_service
 
